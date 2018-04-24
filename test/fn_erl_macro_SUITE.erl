@@ -1,7 +1,12 @@
 -module(fn_erl_macro_SUITE).
 -compile(export_all).
+-include_lib("stdlib/include/assert.hrl").
 
-all() -> [eval_macro, can_expand_var_with_ref, can_expand_macro_str,
+-define(NUM_HEADERS, 1).
+-define(NUM_MACROS, 14).
+
+
+all() -> [parse_to_include_ok, eval_macro, can_expand_var_with_ref, can_expand_macro_str,
           can_expand_simple_inner_macro_call, can_expand_macro_lex_str,
           can_expand_inner_macro_call_in_expr].
 
@@ -28,6 +33,19 @@ exp(Macros, Key, Args) ->
 
 
 %% Tests
+
+parse_to_include_ok(Config) ->
+  MacroPath = macro_path(Config),
+  {ok, Ast, Macros} = fn_erl_macro:parse_to_include(MacroPath),
+
+  % Test number of macros retreived
+  {_,Num,_,_,_,_,_,_,_} = Macros,
+  ?assert(Num =:= ?NUM_MACROS+2),
+
+  % Test number of headers retreived
+  L = length(Ast),
+  ?assert(L =:= ?NUM_HEADERS+ 1).
+
 
 eval_macro(Config) ->
     Macros = macros(Config),
