@@ -6,7 +6,9 @@
 -define(NUM_MACROS, 14).
 
 
-all() -> [parse_to_include_ok, eval_macro, can_expand_var_with_ref, can_expand_macro_str,
+all() -> [parse_to_include_ok, call_macro_no_args, call_macro_with_args,
+          call_macro_with_args_not_found, eval_macro, expand_macro_no_args,
+          can_expand_var_with_ref, can_expand_macro_str,
           can_expand_simple_inner_macro_call, can_expand_macro_lex_str,
           can_expand_inner_macro_call_in_expr].
 
@@ -31,6 +33,26 @@ print(Thing) ->
 exp(Macros, Key, Args) ->
     fn_erl_macro:expand_macro(Macros, Key, Args).
 
+exp(Macros, Key) ->
+  fn_erl_macro:expand_macro(Macros, Key).
+
+rand_number() ->
+  SignProb = rand:uniform(),
+  Sign = if
+     (SignProb > 0.5) -> 1;
+      true -> -1
+  end,
+  Num = rand:uniform()*10000000,
+  Sign*Num.
+
+rand_int() ->
+  SignProb = rand:uniform(),
+  Sign = if
+           (SignProb > 0.5) -> 1;
+           true -> -1
+         end,
+  Num = rand:uniform(10000000),
+  Sign*Num.
 
 %% Tests
 
@@ -44,8 +66,23 @@ parse_to_include_ok(Config) ->
 
   % Test number of headers retreived
   L = length(Ast),
-  ?assert(L =:= ?NUM_HEADERS+ 1).
+  ?assert(L =:= ?NUM_HEADERS+1).
 
+call_macro_no_args(Config) ->
+  Macros = macros(Config),
+  MacroName = 'AUTHOR',
+  {ok, [{string, _, "bob"}]} = fn_erl_macro:call_macro(Macros, MacroName, []).
+
+call_macro_with_args(Config) ->
+  Macros = macros(Config),
+  MacroName = 'Inc',
+  Num = rand_number(),
+  {ok,[{op,_,'+',Num,{integer,_,1}}]} = fn_erl_macro:call_macro(Macros, MacroName, [Num]).
+
+call_macro_with_args_not_found(Config) ->
+  Macros = macros(Config),
+  MacroName = 'Inc',
+  {error,{macro_not_found,'Inc'}} = fn_erl_macro:call_macro(Macros, MacroName, []).
 
 eval_macro(Config) ->
     Macros = macros(Config),
@@ -54,7 +91,11 @@ eval_macro(Config) ->
 
     {ok, [{op, _, '*', {integer, _, 2}, {integer, _, 3}}]} = exp(Macros, 'Const', #{}),
 
-    {ok, [{op, _, '+', {integer, _, 2}, {integer, _, 1}}]} = exp(Macros, {'Inc', 1}, #{'A' => {integer, 1, 2}}),
+    NumInt = rand_int(),
+    {ok, [{op, _, '+', {integer, _, NumInt}, {integer, _, 1}}]} = exp(Macros, {'Inc', 1}, #{'A' => {integer, 1, NumInt}}),
+
+    NumFloat = rand_number(),
+    {ok, [{op, _, '+', {float, _, NumFloat}, {integer, _, 1}}]} = exp(Macros, {'Inc', 1}, #{'A' => {float, 1, NumFloat}}),
 
     { ok, [ {tuple, _, [{string, _, "bob"}, {integer, _, 42}]} ]
     } = exp(Macros, {'AUTHOR', 1}, #{'A' => {integer, 1, 42}}),
@@ -78,6 +119,10 @@ eval_macro(Config) ->
          { op, _, '*', {integer, _, 2}, {integer, _, 3} }
       }]
     } = R2.
+
+expand_macro_no_args(Config) ->
+  Macros = macros(Config),
+  {ok, [{string, _, "bob"}]} = exp(Macros, 'AUTHOR').
 
 can_expand_var_with_ref(Config) ->
     Macros = macros(Config),
