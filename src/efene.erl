@@ -17,7 +17,7 @@
          to_raw_lex/1, to_lex/1, to_ast/1,
          to_erl/1, to_erl_ast/1, to_erl_ast/2,
          to_mod/1,
-         pprint/1, print_errors/2]).
+         pprint/1, print_errors/2, from_erl/1]).
 
 -export([str_to_ast/1]).
 
@@ -114,6 +114,7 @@ compile(Path, DestPath, Opts) ->
         Other -> Other
     end.
 
+%Este metodo no se prueba ya que solo llama a una función externa.
 from_erl(Path) -> epp:parse_file(Path, [], []).
 
 str_to_raw_lex(String) -> fn_lexer:string(String).
@@ -164,6 +165,7 @@ print({ok, Data}) ->
 print({error, _}=Error) ->
     Reason = fn_error:normalize(Error),
     io:format("error:~s~n", [Reason]);
+    
 print(Data) ->
     try io:format("~s~n", [Data]) catch
         _:_ -> io:format("~p~n", [Data])
@@ -275,7 +277,8 @@ clean_tokens([{'fn', _}=H1, {atom, _, _}=H2, {nl, _, _}|T], Accum) -> clean_toke
 clean_tokens([{'def', _}=H1, {atom, _, _}=H2, {nl, _, _}|T], Accum) -> clean_tokens([H1, H2|T], Accum);
 
 % remove newline before end and @
-clean_tokens([{nl, _, _}, {'end', _, _}=H|T], Accum) -> clean_tokens([H|T], Accum);
+%se ha modificado el end para que borre.
+clean_tokens([{nl, _, _}, {'end', _}=H|T], Accum) -> clean_tokens([H|T], Accum);
 clean_tokens([{nl, _, _}, {'case', _}=H|T], Accum) -> clean_tokens([H|T], Accum);
 % remove newline before closing ] ) and }
 clean_tokens([{nl, _, _}, {close, _, _}=H|T], Accum) -> clean_tokens([H|T], Accum);
