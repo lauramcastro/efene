@@ -1,0 +1,137 @@
+-module(db).
+-export([new/0, write/3, destroy/1, loop/1, delete/2, read/2, match/2]).
+
+loop(List)	->	
+	
+	receive
+
+	
+		{From,DbRef, destroy}	->	unregister(DbRef), From ! destroyed;
+			
+
+		
+	end.
+
+new()	->	 register(server,spawn(db, loop, [[]])), server, lists:
+																	split([])
+
+
+destroy(DbRef)	->	DbRef ! {self(),DbRef,
+destroy}, 
+					receive
+						
+							destroyed	-> ok
+					end.
+				DbRef.
+			
+booleanOperators(A,B) ->
+	if A and
+	 B 	-> A;
+	   A or
+	    B  	-> A;
+	   A xor
+	    B 	-> A;
+	   A andd
+	    B -> A;
+	   A orr
+	    B	-> A
+	end.
+
+
+arithmeticOperators(A,B) ->
+  A+
+  B,
+  A-
+  B,
+  A*
+  B,
+  A/
+  B,
+  A%
+  B,
+  A>
+  B,
+  A<
+  B,
+  A>=
+  B,
+  A<=
+  B,
+  A==
+  B,
+  A=
+  B,
+  A is
+  B,
+  A !=
+  B,
+  A isnt
+  B,
+  A :=
+  B.
+
+listOperators([A],[B], C) ->
+ [A]++
+ [B],
+ [A]--
+ [B].
+
+
+delimitersAndOperators(A,B)	->
+A::
+B
+A(
+B,
+A[
+B,
+A{
+B,
+)
+]
+}
+A->
+B,
+A->>
+B,
+A<-
+B,
+A<<-
+B
+->
+B
+->>
+B
+<-
+B
+<<-
+B.
+
+binaryOperator (A,B)	->
+A <<
+B,
+A >>
+B,
+A &
+B,
+A |
+B,
+A ^
+B.
+
+reservedWord(A)	->
+try
+catch
+after
+receive
+begin
+when
+fn
+fn A 
+fn atom 
+def a
+.
+
+otherWords(A)	->
+A
+case
+end
