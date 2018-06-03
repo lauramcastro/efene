@@ -1,6 +1,7 @@
 -module(fn_erl_macro_SUITE).
 -compile(export_all).
 -include_lib("stdlib/include/assert.hrl").
+-include_lib("proper/include/proper.hrl").
 
 -define(NUM_HEADERS, 1).
 -define(NUM_MACROS, 14).
@@ -45,14 +46,13 @@ rand_number() ->
   Num = rand:uniform()*10000000,
   Sign*Num.
 
-rand_int() ->
-  SignProb = rand:uniform(),
-  Sign = if
-           (SignProb > 0.5) -> 1;
-           true -> -1
-         end,
-  Num = rand:uniform(10000000),
-  Sign*Num.
+check_prop({Prop, Args, Des}) ->
+  Result = proper:quickcheck(?MODULE:Prop(Args)),
+  if
+    Result == false -> ct:fail({Prop, Des, proper:counterexample()});
+    Result == true -> true;
+    true -> ct:fail({Prop, Des, Result})
+  end.
 
 %% Tests
 
@@ -91,11 +91,9 @@ eval_macro(Config) ->
 
     {ok, [{op, _, '*', {integer, _, 2}, {integer, _, 3}}]} = exp(Macros, 'Const', #{}),
 
-    NumInt = rand_int(),
-    {ok, [{op, _, '+', {integer, _, NumInt}, {integer, _, 1}}]} = exp(Macros, {'Inc', 1}, #{'A' => {integer, 1, NumInt}}),
+    check_prop({prop_inc_integer_macro, Macros, "inc_integer_macro"}),
 
-    NumFloat = rand_number(),
-    {ok, [{op, _, '+', {float, _, NumFloat}, {integer, _, 1}}]} = exp(Macros, {'Inc', 1}, #{'A' => {float, 1, NumFloat}}),
+    check_prop({prop_inc_float_macro, Macros, "inc_float_macro"}),
 
     { ok, [ {tuple, _, [{string, _, "bob"}, {integer, _, 42}]} ]
     } = exp(Macros, {'AUTHOR', 1}, #{'A' => {integer, 1, 42}}),
@@ -119,6 +117,22 @@ eval_macro(Config) ->
          { op, _, '*', {integer, _, 2}, {integer, _, 3} }
       }]
     } = R2.
+
+prop_inc_integer_macro(Macros) ->
+  ?FORALL({Int},
+    {integer()},
+    case exp(Macros, {'Inc', 1}, #{'A' => {integer, 1, Int}}) of
+      {ok, [{op, _, '+', {integer, _, Int}, {integer, _, 1}}]} -> true;
+      _ -> false
+    end).
+
+prop_inc_float_macro(Macros) ->
+  ?FORALL({Float},
+    {float()},
+    case exp(Macros, {'Inc', 1}, #{'A' => {float, 1, Float}}) of
+      {ok, [{op, _, '+', {float, _, Float}, {integer, _, 1}}]} -> true;
+      _ -> false
+    end).
 
 expand_macro_no_args(Config) ->
   Macros = macros(Config),
