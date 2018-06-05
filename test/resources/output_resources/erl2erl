@@ -1,5 +1,6 @@
--file("/home/gabriel/Escritorio/VVS/efene/test/resou"
-      "rces/input_resources/erl2.erl",
+-file("/home/gabriel/Escritorio/VVS/efene/_build/tes"
+      "t/lib/efene/test/resources/input_resources/er"
+      "l2.erl",
       1).
 
 -module(erl2).

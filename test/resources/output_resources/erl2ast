@@ -1,5 +1,5 @@
 [{attribute,1,file,
-            {"/home/gabriel/Escritorio/VVS/efene/test/resources/input_resources/erl2.erl",
+            {"/home/gabriel/Escritorio/VVS/efene/_build/test/lib/efene/test/resources/input_resources/erl2.erl",
              1}},
  {attribute,1,module,erl2},
  {attribute,3,export,[{first_example,1},{stop,1},{start,2}]},

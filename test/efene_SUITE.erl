@@ -2,8 +2,8 @@
 -compile(export_all).
 -include_lib("stdlib/include/assert.hrl").
 
--define(input, "/home/gabriel/Escritorio/VVS/efene/test/resources/input_resources/").
--define(output, "/home/gabriel/Escritorio/VVS/efene/test/resources/output_resources/").
+-define(input, "/resources/input_resources/").
+-define(output, "/resources/output_resources/").
 
 
 all() -> [to_lex_test, to_raw_lex_test, to_ast_test, to_mod_test, to_erlast_test, to_erl_test, erl2ast_test, erl2erl_test].
@@ -20,8 +20,9 @@ removeN([H|T], ListAux)-> removeN(T, [H|ListAux]).
 %% Tests
 
 to_raw_lex_test(_)->
-	case efene:to_raw_lex(?input++"example_to_remove") of
-		{ok, Data, _}-> case file:read_file(?output++"to_raw_lex") of
+	Path = filename:dirname(code:which(?MODULE)),
+	case efene:to_raw_lex(Path++?input++"example_to_remove") of
+		{ok, Data, _}-> case file:read_file(Path++?output++"to_raw_lex") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~w", [Data])),
 											OutputN = removeN(Output,[]),
@@ -32,8 +33,9 @@ to_raw_lex_test(_)->
 	end.
 
 to_lex_test(_)->
-	case efene:to_lex(?input++"example_to_remove") of
-		{ok, Data, _}-> case file:read_file(?output++"example_to_remove") of
+	Path = filename:dirname(code:which(?MODULE)),
+	case efene:to_lex(Path++?input++"example_to_remove") of
+		{ok, Data, _}-> case file:read_file(Path++?output++"example_to_remove") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~w", [Data])),
 											OutputN = removeN(Output,[]),
@@ -45,8 +47,9 @@ to_lex_test(_)->
 
 
 to_ast_test(_)	->
-	case efene:to_ast("/home/gabriel/Escritorio/VVS/efene/test/resources/input_resources/ast") of
-		{ok,Data}-> case file:read_file(?output++"ast") of
+	Path = filename:dirname(code:which(?MODULE)),
+	case efene:to_ast(Path++?input++"ast") of
+		{ok,Data}-> case file:read_file(Path++?output++"ast") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~p~n", [Data])),
 											check(Input, Output);
@@ -56,8 +59,9 @@ to_ast_test(_)	->
 	end.
 
 to_mod_test(_)	->
-	case efene:to_mod(?input++"ast") of
-		{ok, Data}-> case file:read_file(?output++"mod") of
+	Path = filename:dirname(code:which(?MODULE)),
+	case efene:to_mod(Path++?input++"ast") of
+		{ok, Data}-> case file:read_file(Path++?output++"mod") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~p~n", [Data])),
 											check(Input, Output);
@@ -82,8 +86,9 @@ to_erlast_test(_)	->
 true.	
 	
 to_erl_test(_)	->
-	case efene:to_erl(?input++"ast") of
-		Data -> case file:read_file(?output++"erl") of
+	Path = filename:dirname(code:which(?MODULE)),
+	case efene:to_erl(Path++?input++"ast") of
+		Data -> case file:read_file(Path++?output++"erl") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~p~n", [Data])),
 											OutputN = removeN(Output,[]),
@@ -94,8 +99,9 @@ to_erl_test(_)	->
 
 
 erl2ast_test(_) ->
-	case efene:from_erl(?input++"erl2.erl") of
-		{ok, Data}-> case file:read_file(?output++"erl2ast") of
+	Path = filename:dirname(code:which(?MODULE)),
+	case efene:from_erl(Path++?input++"erl2.erl") of
+		{ok, Data}-> case file:read_file(Path++?output++"erl2ast") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~p~n", [Data])),
 											check(Input, Output);
@@ -105,8 +111,9 @@ erl2ast_test(_) ->
 	end.
 	
 erl2erl_test(_) ->
-	case efene:from_erl(?input++"erl2.erl") of
-		{ok, Data} -> case file:read_file(?output++"erl2erl") of
+	Path = filename:dirname(code:which(?MODULE)),
+	case efene:from_erl(Path++?input++"erl2.erl") of
+		{ok, Data} -> case file:read_file(Path++?output++"erl2erl") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = erl_prettypr:format(erl_syntax:form_list(Data)),
 											check(Input, Output);
