@@ -6,7 +6,7 @@
 -define(output, "/resources/output_resources/").
 
 
-all() -> [to_lex_test, to_raw_lex_test, to_ast_test, to_mod_test, to_erlast_test, to_erl_test, erl2ast_test, erl2erl_test].
+all() -> [to_lex_test, to_raw_lex_test, to_ast_test, to_mod_test, to_erl_test, erl2ast_test, erl2erl_test].
 
 check([],[])	-> true;
 check(L,[])		-> ?assert(true =:= false);
@@ -17,6 +17,37 @@ check([H1|T],[H2|T])	-> false.
 removeN([_|[]],ListAux)	->   lists:reverse(ListAux);
 removeN([H|T], ListAux)-> removeN(T, [H|ListAux]).
 
+
+
+
+removePaths([_|[]],ListAux, IsPath)		-> lists:reverse(ListAux);
+
+removePaths([H|T],ListAux, true) 	->	if 
+										  H == 10	->	removePaths(T,ListAux,false);
+										  true		->	removePaths(T,ListAux,true)
+										end;
+										
+										 
+removePaths([H|T],ListAux, false) 	->	if 
+										  H == 47	->	removePaths(T,ListAux,true);
+										  true		->	removePaths(T,[H|ListAux],false)
+										end.
+										
+
+
+removeSpecialPaths([_|[]],ListAux, _, _)					-> lists:reverse(ListAux);
+
+removeSpecialPaths([H|T],ListAux, false, false) 			->	removeSpecialPaths(T,[H|ListAux],false,false);	
+
+removeSpecialPaths([H|T],ListAux, false, true) 				->	if 
+																  H == 41	->	removeSpecialPaths(T,ListAux,false,false);
+																  true		->	removeSpecialPaths(T,ListAux,false,true)
+																end;	
+										 
+removeSpecialPaths([H|T],ListAux, FirstTime, StartRemove) 	->	if 
+																  H == 40 	->	removeSpecialPaths(T,ListAux,false,true);
+																  true		->	removeSpecialPaths(T,[H|ListAux],true,false)
+																end.
 %% Tests
 
 to_raw_lex_test(_)->
@@ -64,26 +95,14 @@ to_mod_test(_)	->
 		{ok, Data}-> case file:read_file(Path++?output++"mod") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~p~n", [Data])),
-											check(Input, Output);
+											Input2 = removePaths(Input,[],false),
+											Output2 = removePaths(Output,[],false),
+											check(Input2, Output2);
 							_ -> ?assert(true =:= false)
 						end;
 		_-> ?assert(true =:= false)
 	end.
 
-%Falla porque la función to_erl_ast devuelve entre otras cosas diversos paths
-%Estos paths variarán de un ordenador a otro por lo que 
-%habra que obtener los substrings con los datos que devuelva la funcion considerados mas importantes
-to_erlast_test(_)	->
-%	case efene:to_erl_ast(?input++"ast") of
-%		{ok, Data}-> case file:read_file(?output++"erlast") of
-%							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
-%											Input = lists:flatten(io_lib:format("~p~n", [Data])),
-%											check(Input, Output);
-%							_ -> ?assert(true =:= false)
-%						end;
-%		_-> ?assert(true =:= false)
-%	end.
-true.	
 	
 to_erl_test(_)	->
 	Path = filename:dirname(code:which(?MODULE)),
@@ -104,7 +123,9 @@ erl2ast_test(_) ->
 		{ok, Data}-> case file:read_file(Path++?output++"erl2ast") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = lists:flatten(io_lib:format("~p~n", [Data])),
-											check(Input, Output);
+											Input2 = removePaths(Input, [], false),
+											Output2 = removePaths(Output, [], false),
+											check(Input2, Output2);
 							_ -> ?assert(true =:= false)
 						end;
 		_-> ?assert(true =:= false)
@@ -116,7 +137,9 @@ erl2erl_test(_) ->
 		{ok, Data} -> case file:read_file(Path++?output++"erl2erl") of
 							{ok, Content} -> Output = unicode:characters_to_list(Content, utf8),
 											Input = erl_prettypr:format(erl_syntax:form_list(Data)),
-											check(Input, Output);
+											Input2 = removeSpecialPaths(Input, [], true, false),
+											Output2 = removeSpecialPaths(Output, [],true,false),
+											check(Input2, Output2);
 							_ -> ?assert(true =:= false)
 						end;
 		_-> ?assert(true =:= false)
